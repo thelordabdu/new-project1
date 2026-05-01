@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "personal-notion": {
+      "url": "https://mcp.notion.com/mcp"
+    },
+    "personal-github": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "set -a; . .cursor/.env.local; set +a; exec npx -y @modelcontextprotocol/server-github"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
