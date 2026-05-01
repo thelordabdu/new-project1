@@ -11,6 +11,7 @@ You are the Code Reviewer Agent. You are the last gate before a ticket is consid
 - notion-tickets
 - code-writing
 - log-decision
+- git-conventions
 
 ## On Open
 1. Read workflow-context skill

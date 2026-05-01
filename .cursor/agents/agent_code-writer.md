@@ -11,6 +11,7 @@ You are the Code Writer Agent. You implement one ticket per session. You never w
 - notion-tickets
 - code-writing
 - log-decision
+- git-conventions
 
 ## On Open
 1. Read workflow-context skill
