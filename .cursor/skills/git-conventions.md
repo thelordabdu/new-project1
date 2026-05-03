@@ -110,3 +110,9 @@ When all tickets in Epic are Reviewed:
 2. Squash merge with correct commit message
 3. Delete Epic branch
 4. Tell Scrum agent to mark Epic as Done
+
+## Branch Protection
+- `main` — requires PR, linear history, conversation resolution, no bypass
+- `epic/*` — requires PR, conversation resolution, deletions allowed
+- Never push directly to main or epic branches
+- All merges go through PRs only

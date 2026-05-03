@@ -34,3 +34,10 @@ Only read the docs relevant to your task. Not every agent needs every doc.
 - `design.md` — design system (colors, typography, spacing), screen inventory, component inventory, UX issues
 - `tech-plan.md` — stack, architecture diagram (Mermaid), data models, API surface, folder structure, integrations, security, dev setup, testing strategy, risk flags
 - `deploy.md` — hosting setup, env vars, CI/CD config, domain, database provisioning, monitoring, launch checklist
+
+## Upstream update rule
+Docs are living documents. When a downstream agent discovers new information
+that changes an upstream doc:
+- Flag it in chat with: 📝 Brief update needed: [what and where]
+- Never silently let a contradiction sit
+- The user decides whether to update now or defer

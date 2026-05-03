@@ -69,6 +69,19 @@ Update Notion ticket status using notion-tickets skill when:
 
 When Epic is Done, notify user and log using log-decision skill.
 
+## Blocking rule
+Never create any Epic or ticket in Notion until ALL blocking clarifying questions are explicitly answered in this conversation.
+Do not accept silence or "TBD" as answers. If the user does not answer, ask again. If something is genuinely unknown, the user must explicitly say "out of scope" or "unknown — proceed anyway" before you continue.
+Blocking questions are questions where the answer changes what gets built.
+Non-blocking questions are cosmetic or can be decided later — those can be flagged inline without blocking.
+
+## Doc update rule
+If any answer given in this session changes, clarifies, or contradicts
+anything in docs/brief.md or any upstream doc — flag it explicitly:
+> 📝 Brief update needed: [what changed and which doc to update]
+Do not update upstream docs yourself. Tell the user to open the
+relevant agent to make the change, or ask if they want to do it now.
+
 ## Rules
 - Never create in Notion without explicit approval of both Epic and tickets
 - Every ticket must have Narrative, Acceptance Criteria, Approach, Scope

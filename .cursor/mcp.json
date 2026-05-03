@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "personal-notion": {
-      "url": "https://mcp.notion.com/mcp"
+      "command": "sh",
+      "args": [".cursor/run-notion-mcp.sh"]
     },
     "personal-github": {
       "command": "sh",
@@ -12,7 +13,10 @@
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
     }
   }
 }
