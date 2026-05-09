@@ -32,6 +32,13 @@ fix/PROJ-002/short-description
 - Example: `feat/PROJ-001/jwt-token-generation`
 - Example: `fix/PROJ-007/refresh-token-expiry`
 
+### No ticket yet (adhoc / tooling / docs)
+When there is **no Notion ticket** for the work you are branching or pushing, use **`PROJ-000`** as the placeholder ID everywhere you would normally put a ticket ID (branch path, commit summary suffix, PR title).
+
+- Branch: `feat/PROJ-000/short-description` or `fix/PROJ-000/short-description` (pick `feat` vs `fix` by the kind of change)
+- Example: `fix/PROJ-000/cursor-agents`
+- When a real ticket exists later, **rename the branch** or **open the next branch** with the real ID; do not leave `PROJ-000` on long-lived work once ticketed
+
 ## Commit Message Format
 one line summary (PROJ-001)
 
@@ -41,7 +48,7 @@ any side effects or notes
 
 
 Rules:
-- First line: max 72 characters, plain English, ticket ID in brackets at the end
+- First line: max 72 characters, plain English, ticket ID in brackets at the end (`PROJ-000` when no ticket; see **No ticket yet** under Branch Naming)
 - Blank line between summary and bullets
 - Bullets: short, concrete, present tense
 - No emojis, no vague messages like "fix stuff" or "wip"
@@ -59,6 +66,12 @@ fix refresh token expiry check returning wrong status (PROJ-007)
 expiry was compared against local time instead of UTC
 updated validateToken() to use Date.now() consistently
 affects login flow only, no DB changes
+
+
+document PROJ-000 for adhoc work without Notion tickets (PROJ-000)
+
+branch and commit rules when no ticket is assigned
+PR title uses [PROJ-000]; description states scope instead of Notion AC
 
 
 ## Merge Strategy
@@ -82,8 +95,8 @@ ticket PROJ-003: what it did
 ## PR Rules
 - One PR per ticket (ticket branch → Epic branch)
 - One PR per Epic (Epic branch → main) after all tickets Reviewed
-- PR title must include ticket ID
-- PR description must list acceptance criteria from the Notion ticket
+- PR title must include ticket ID (use `[PROJ-000]` when there is no Notion ticket)
+- PR description must list acceptance criteria from the Notion ticket (for `PROJ-000` PRs, describe scope and intent instead)
 - Never merge a ticket PR if Code Reviewer verdict is not Approved
 
 ## Code Writer Responsibilities
