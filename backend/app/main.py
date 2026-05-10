@@ -1,5 +1,6 @@
 import logging
 import sys
+import warnings
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from logging import INFO, StreamHandler, basicConfig
@@ -35,10 +36,19 @@ for _name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
     _logger.handlers.clear()
     _logger.propagate = True
 
+# Suppress duplicate Operation ID warnings from FastAPI's openapi generator.
+# These come from the fork's Oura webhook router being included twice and are cosmetic.
+warnings.filterwarnings("ignore", message="Duplicate Operation ID.*", category=UserWarning)
+
+_log = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def _lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    svix_service.register_event_types()
+    try:
+        svix_service.register_event_types()
+    except Exception:
+        _log.debug("Svix registration failed — outgoing webhooks disabled (expected in local dev)")
     yield
 
 
