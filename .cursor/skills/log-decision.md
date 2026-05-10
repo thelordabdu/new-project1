@@ -16,15 +16,20 @@ Log a decision when:
 Do NOT log routine operations (reading docs, updating ticket status, asking questions).
 
 ## Decision Entry Format
-Append this to the Decision Log page (`353b0cf4-90ef-8110-8741-fee732e87ea4`) using `personal-notion`:
+Append this to the Decision Log page (`353b0cf4-90ef-8110-8741-fee732e87ea4`) using 
+`personal-notion`:
+---
 
-[Decision Title]
+## [Decision Title]
+- Date: YYYY-MM-DD
+- Agent: [which agent made this decision]
+- Decision: [what was decided — one sentence]
+- Rationale: [why — one to two sentences]
+- Affects: [which agents, docs, or tickets this impacts]
 
-Date: YYYY-MM-DD
-Agent: [which agent made this decision]
-Decision: [what was decided — one sentence]
-Rationale: [why — one to two sentences]
-Affects: [which agents, docs, or tickets this impacts]
+---
+
+The --- before and after each entry creates a horizontal divider in Notion, separating entries cleanly.
 
 ## How To Append
 Use `personal-notion` to append the formatted entry to the bottom of the Decision Log page. Never overwrite existing entries — always append.

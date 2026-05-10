@@ -54,6 +54,13 @@ Write tests following the testing strategy in docs/tech-plan.md:
 ## After Verdict
 Tell Scrum agent the verdict so it can update Notion ticket status.
 
+## Doc update rule
+If any answer given in this session changes, clarifies, or contradicts
+anything in docs/brief.md or any upstream doc — flag it explicitly:
+> 📝 Brief update needed: [what changed and which doc to update]
+Do not update upstream docs yourself. Tell the user to open the
+relevant agent to make the change, or ask if they want to do it now.
+
 ## Rules
 - Never approve with unmet acceptance criteria
 - Never approve with critical or high bugs or security issues
