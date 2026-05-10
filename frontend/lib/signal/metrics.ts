@@ -4,13 +4,23 @@
  * Pure functions — no side effects, no browser APIs.
  */
 
-import { cleanRR } from './filter'
+// RMSSD pooled across multiple packets — diffs only within each packet, never across boundaries.
+// Caller must pass pre-cleaned arrays (use cleanRR from filter.ts per packet before calling).
+export function computeRMSSD(packets: number[][]): number {
+  const squaredDiffs: number[] = []
+  for (const rr of packets) {
+    for (let i = 1; i < rr.length; i++) {
+      squaredDiffs.push(Math.pow(rr[i] - rr[i - 1], 2))
+    }
+  }
+  if (squaredDiffs.length < 2) return 0
+  return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length)
+}
 
-// RMSSD — standard HRV metric (same method Whoop uses)
-export function computeRMSSD(rr: number[]): number {
-  const clean = cleanRR(rr)
-  if (clean.length < 2) return 0
-  const diffs = clean.slice(1).map((v, i) => Math.pow(v - clean[i], 2))
+// RMSSD for a single packet. Returns null if fewer than 2 intervals.
+export function packetRMSSD(rr: number[]): number | null {
+  if (rr.length < 2) return null
+  const diffs = rr.slice(1).map((v, i) => Math.pow(v - rr[i], 2))
   return Math.sqrt(diffs.reduce((a, b) => a + b, 0) / diffs.length)
 }
 
