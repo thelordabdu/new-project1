@@ -11,6 +11,7 @@ from .deprecated_webhooks import router as deprecated_webhooks_router
 from .developers import router as developers_router
 from .events import router as events_router
 from .health_scores import router as health_scores_router
+from .scores import router as scores_router
 from .import_xml import router as import_xml_router
 from .invitations import router as invitations_router
 from .oauth import router as oauth_router
@@ -41,6 +42,7 @@ v1_router.include_router(summaries_router, tags=["External: Summaries"])
 v1_router.include_router(timeseries_router, tags=["External: Timeseries"])
 v1_router.include_router(events_router, tags=["External: Events"])
 v1_router.include_router(health_scores_router, tags=["External: Health Scores"])
+v1_router.include_router(scores_router, tags=["External: Scores"])
 v1_router.include_router(oauth_router, prefix="/oauth")
 v1_router.include_router(sync_data_router, prefix="/providers", tags=["External: Data Sync"])
 v1_router.include_router(sync_status_router, tags=["External: Sync Status"])
