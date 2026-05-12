@@ -1,1 +1,32 @@
-.cursor/.env.local
+# ─── Environment variables ───────────────
+.env
+.env.local
+backend/config/.env
+frontend/.env.local
+
+# ─── Python ──────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ─── Node ────────────────────────────────
+node_modules/
+.next/
+out/
+
+# ─── Editors / IDEs ──────────────────────
+.vscode/
+.cursor/
+.idea/
+
+# ─── OS ──────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Misc ────────────────────────────────
+*.log
+backend/celerybeat-schedule*

@@ -27,6 +27,9 @@ from app.schemas.enums import AggregationMethod, HealthScoreCategory, ProviderNa
 from app.schemas.model_crud.user_management import InvitationStatus
 from app.utils.mappings_meta import AutoRelMeta
 
+# prepare_threshold=None disables server-side prepared statements — required for
+# PgBouncer in transaction mode, which resets connection state between transactions.
+# (prepare_threshold=0 means "prepare on first use", which is NOT what we want.)
 engine = create_engine(
     settings.db_uri,
     pool_pre_ping=True,
@@ -34,8 +37,12 @@ engine = create_engine(
     max_overflow=30,
     pool_timeout=30,
     pool_recycle=3600,
+    connect_args={"prepare_threshold": None},
 )
-async_engine = create_async_engine(settings.db_uri)
+async_engine = create_async_engine(
+    settings.db_uri,
+    connect_args={"prepare_threshold": None},
+)
 
 
 def _prepare_sessionmaker(engine: Engine) -> sessionmaker:
