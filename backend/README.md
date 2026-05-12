@@ -61,15 +61,15 @@ uv sync --group code-quality
 
 ### Running the Application
 
-**Using Docker (Recommended):**
+**Using Docker:**
 
 ```bash
 # From the project root directory
-# Start services
-docker compose up -d
+# Start the backend API
+docker compose up -d backend
 
 # Run migrations
-docker compose exec app uv run alembic upgrade head
+docker compose exec backend alembic upgrade head
 ```
 
 The API will be available at:
@@ -82,7 +82,7 @@ The API will be available at:
 # Install dependencies
 uv sync
 
-# Start PostgreSQL locally
+# Supabase Postgres is configured through config/.env
 
 # Create migration
 uv run alembic revision --autogenerate -m "Description"
@@ -91,7 +91,7 @@ uv run alembic revision --autogenerate -m "Description"
 uv run alembic upgrade head
 
 # Start development server
-uv run fastapi run app/main.py --reload
+uv run uvicorn app.main:api --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Database Migrations
@@ -99,7 +99,7 @@ uv run fastapi run app/main.py --reload
 **Create a new migration:**
 ```bash
 # Using Docker
-docker compose exec app uv run alembic revision --autogenerate -m "Description of changes"
+docker compose exec backend alembic revision --autogenerate -m "Description of changes"
 
 # Local development
 uv run alembic revision --autogenerate -m "Description of changes"
@@ -108,7 +108,7 @@ uv run alembic revision --autogenerate -m "Description of changes"
 **Run migrations:**
 ```bash
 # Using Docker
-docker compose exec app uv run alembic upgrade head
+docker compose exec backend alembic upgrade head
 
 # Local development
 uv run alembic upgrade head
@@ -117,7 +117,7 @@ uv run alembic upgrade head
 **Rollback migrations:**
 ```bash
 # Using Docker
-docker compose exec app uv run alembic downgrade -1
+docker compose exec backend alembic downgrade -1
 
 # Local development
 uv run alembic downgrade -1
@@ -192,9 +192,10 @@ Create a `.env` file in the `config/` directory (see `config/.env.example` for r
 - JWT secrets
 - Other service configurations
 
-## Additional Services
+## Background Jobs
 
-The backend also includes:
+Celery and Redis exist in the inherited fork, but they are not part of the active v0.2.1 runtime.
 
-- **Celery**: For background task processing
-- **Flower**: Celery monitoring (available at http://localhost:5555 when running)
+Keep them in mind for future jobs such as nightly comparator runs, provider sync retries, and webhook-triggered snapshot refreshes. Until then, prefer direct API endpoints and explicit manual commands.
+
+Docker command notes live in `../docs/docker-cheatsheet.md`.

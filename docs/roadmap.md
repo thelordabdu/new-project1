@@ -28,6 +28,7 @@
 - [x] **v0.2 — Whoop OAuth + data sync**
   - [x] v0.2.1 — OAuth wiring, env fixes (Fernet key, `API_BASE_URL`), DB fix (`prepare_threshold=None`), FK insert
   - [x] v0.2.2 — `daily_snapshots` Alembic migration, `GET /scores` route (phase-aware), settings page with Connect Whoop button
+  - [x] follow-up — Tech stack config cleanup (`fix/v0.2.1/tech-stack-config`)
   - Findings: `docs/v0/v0.2.md`
   - State: 41 `health_score` rows, 45 `event_record` rows for dev user
 
