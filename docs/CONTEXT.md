@@ -11,17 +11,28 @@
 **Last updated:** 2026-05-12
 
 **Active epic:** v0 — Foundation
-**Active version:** v0.3 — Populate daily_snapshots
-**Status:** v0.2 complete. v0.3 not started. No blockers. All services running.
+**Active version:** v0.2.1 follow-up — Tech stack config cleanup
+**Status:** Complete on `fix/v0.2.1/tech-stack-config`. v0.2.2 root cleanup is next, then v0.2.3 backend architecture, then v0.2.4 frontend architecture.
 
 **What was just finished (v0.2):**
 - Whoop OAuth works end-to-end
-- Historical sync (30 days) runs cleanly via Celery worker
+- Historical sync (30 days) ran cleanly through the inherited Celery worker before v0.2.1 deferred Celery/Redis from active runtime
 - 41 rows in `health_score`, 45 rows in `event_record` for dev user `64278722-3f20-479e-8010-0b9afbb16ba0`
 - `daily_snapshots` table exists in DB but is empty — that's v0.3's job
 - All worker errors fixed (`prepare_threshold=None`, `after_commit` hook)
 
-**What to do next (v0.3):**
+**What was just finished (v0.2.1 follow-up):**
+1. Docker Compose now runs only the `backend` service
+2. Supabase Postgres remains external
+3. Celery/Redis are deferred, documented, and out of active compose
+4. Docker command cheat sheet added at `docs/docker-cheatsheet.md`
+
+**What to do next (cleanup branches):**
+1. v0.2.2 — root cleanup
+2. v0.2.3 — backend architecture restructure
+3. v0.2.4 — frontend architecture restructure
+
+**What to do after cleanup branches (v0.3):**
 1. Read `docs/v0/v0.3.md` — write it first if it doesn't exist
 2. Inspect `health_score` + `event_record` models and document field mapping (v0.3.1)
 3. Write `snapshot_service.py` to upsert `daily_snapshots.api_*` from fork's tables (v0.3.2)
@@ -56,12 +67,14 @@ Whoop's API is training data, not the product. Full strategy: `docs/algo-strateg
 | `docs/brief.md` | Product brief, audience, value prop, success metrics |
 | `docs/plan.md` | Full product plan, user flows, MoSCoW feature list |
 | `docs/tech-plan.md` | Full technical architecture — read before writing product code |
+| `docs/docker-cheatsheet.md` | Docker commands, what each command does, and current v0 runtime |
 | `docs/algo-strategy.md` | Algorithm learning pipeline, comparator, migration logic |
 | `docs/business.md` | Business analysis and viability |
 | `docs/v0/v0.0.md` | v0.0 BLE findings |
 | `docs/v0/v0.1.md` | v0.1 signal processing plan |
 | `docs/v0/v0.1-findings.md` | v0.1 findings + RMSSD bug fix |
 | `docs/v0/v0.2.md` | v0.2 OAuth wiring, bugs fixed, DB state |
+| `docs/v0/v0.2.1.md` | v0.2.1 tech stack config cleanup |
 | `docs/v0/v0.3.md` | v0.3 plan (write before coding v0.3) |
 
 ---
@@ -72,7 +85,7 @@ Whoop's API is training data, not the product. Full strategy: `docs/algo-strateg
 |---|---|
 | Backend | FastAPI (Python), fork of open-wearables |
 | Database | PostgreSQL via Supabase, PgBouncer pooler port **6543** |
-| Background jobs | Celery + Redis |
+| Background jobs | Deferred. Celery/Redis are not active in v0.2.1; keep `app/jobs/` in mind for comparator/nightly sync later. |
 | Frontend | Next.js 14 App Router, TypeScript, Tailwind CSS |
 | Auth (frontend) | Supabase Auth — magic link (wired in v0.9) |
 | Auth (backend API) | JWT (developer login) + API key (sync endpoints) |
@@ -83,9 +96,9 @@ Whoop's API is training data, not the product. Full strategy: `docs/algo-strateg
 ## Local dev — start everything
 
 ```bash
-# Backend + worker + beat
+# Backend API only. Supabase Postgres is external.
 cd new-project1
-docker compose up -d
+docker compose up -d backend
 
 # Frontend
 cd frontend && npm run dev
@@ -95,11 +108,13 @@ cd frontend && npm run dev
 # API docs:     http://localhost:8000/docs
 ```
 
-**After changing `database.py` or any file the worker image bundles — restart is NOT enough:**
+**After changing backend dependencies or Dockerfile layers — rebuild the backend image:**
 ```bash
-docker compose build --no-cache worker && docker compose up -d worker
+docker compose build --no-cache backend && docker compose up -d backend
 ```
-`docker compose restart worker` does not rebuild the image. Code changes are not picked up.
+`docker compose restart backend` does not rebuild the image. Normal Python code changes are picked up by `--reload`; dependency/image changes need a rebuild.
+
+Docker command cheat sheet: `docs/docker-cheatsheet.md`
 
 ---
 
@@ -214,9 +229,9 @@ Unique constraint: `(user_id, date)` — one row per user per day, upsert on con
 
 | Error | Cause | Fix |
 |---|---|---|
-| `InvalidSqlStatementName: prepared statement "_pg3_N"` | PgBouncer transaction mode | `prepare_threshold=None` in `database.py`. Rebuild worker. |
+| `InvalidSqlStatementName: prepared statement "_pg3_N"` | PgBouncer transaction mode | `prepare_threshold=None` in `database.py`. Rebuild backend image if dependency/image config changed. |
 | `FernetDecryptorField` validation error on startup | `MASTER_KEY` wrong length/format | Must be 44-char base64 ending in `=`. Regenerate with `Fernet.generate_key()`. |
-| Worker not picking up code changes | `restart` doesn't rebuild image | `docker compose build --no-cache worker && docker compose up -d worker` |
+| Backend not picking up dependency/image changes | `restart` doesn't rebuild image | `docker compose build --no-cache backend && docker compose up -d backend` |
 | `redirect_uri does not match` on Whoop OAuth | `API_BASE_URL` wrong or missing | Set to ngrok URL in `backend/config/.env`. Restart backend. |
 | `foreign key violation` on OAuth callback | No row in `user` table for this auth user | `INSERT INTO "user" (id) VALUES ('<uuid>');` |
 | `InvalidRequestError` in `after_commit` hook | ORM lazy-load after session commit | Extract scalars before registering listener (fixed in `event_record_service.py`). |

@@ -1,6 +1,7 @@
 services:
-  # FastAPI backend (Open Wearables fork)
-  # Postgres + Redis run locally on the host — no containers needed
+  # Active v0 runtime: FastAPI only.
+  # Supabase Postgres is external; Celery/Redis are deferred until background jobs
+  # are needed for comparator/nightly sync.
   backend:
     build: ./backend
     restart: unless-stopped
@@ -13,27 +14,3 @@ services:
     volumes:
       - ./backend:/root_project
     command: uvicorn app.main:api --host 0.0.0.0 --port 8000 --reload
-
-  # Celery worker — background sync + comparator jobs
-  worker:
-    build: ./backend
-    restart: unless-stopped
-    env_file:
-      - ./backend/config/.env
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - ./backend:/root_project
-    command: celery -A app.main:celery_app worker --loglevel=info
-
-  # Celery beat — scheduled tasks (Garmin poll, nightly comparator)
-  beat:
-    build: ./backend
-    restart: unless-stopped
-    env_file:
-      - ./backend/config/.env
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - ./backend:/root_project
-    command: celery -A app.main:celery_app beat --loglevel=info
