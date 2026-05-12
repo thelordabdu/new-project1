@@ -4,9 +4,10 @@
  * Pure functions — no React, no browser APIs.
  */
 
-// Remove physiologically impossible values (HR 30–220 BPM → RR 273–2000ms)
+// Remove physiologically impossible values (HR 30–180 BPM → RR 333–2000ms)
+// Upper HR cap is 180 BPM for resting/recovery context. Workout mode may need adjustment.
 export function filterPhysiological(rr: number[]): number[] {
-  return rr.filter(v => v >= 273 && v <= 2000)
+  return rr.filter(v => v >= 333 && v <= 2000)
 }
 
 // Remove values that deviate >20% from local window median (motion artifact)

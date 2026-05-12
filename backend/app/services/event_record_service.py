@@ -120,11 +120,28 @@ class EventRecordService(
         if record is not None and record.data_source_id is not None:
             data_source = db_session.get(DataSource, record.data_source_id)
             if data_source is not None:
-                _record, _data_source, _detail = record, data_source, detail
+                # Capture all ORM attribute values as plain scalars NOW, before commit
+                # puts the session in 'committed' state where lazy-loading raises
+                # InvalidRequestError. The closure captures these plain values only.
+                _category = record.category
+                _zone_offset = record.zone_offset
+                _record_id = record.id
+                _start_datetime = record.start_datetime
+                _end_datetime = record.end_datetime
+                _duration_seconds = record.duration_seconds
+                _record_type = record.type
+                _provider = str(data_source.provider)
+                _device = data_source.device_model
+                _user_id = data_source.user_id
+                _detail = detail
 
                 @sa_event.listens_for(db_session, "after_commit", once=True)
                 def _dispatch_webhook(session: DbSession) -> None:  # noqa: ARG001
-                    self._emit_event_record_webhook(_record, _data_source, _detail)
+                    self._emit_event_record_webhook_scalars(
+                        _category, _zone_offset, _record_id, _start_datetime,
+                        _end_datetime, _duration_seconds, _record_type,
+                        _provider, _device, _user_id, _detail,
+                    )
 
         return result  # type: ignore[return-value]
 
@@ -542,6 +559,82 @@ class EventRecordService(
                 avg_pace_sec_per_km=avg_pace,
             )
 
+    @staticmethod
+    def _emit_event_record_webhook_scalars(
+        category: str | None,
+        zone_offset: str | None,
+        record_id: object,
+        start_datetime: object,
+        end_datetime: object,
+        duration_seconds: int | None,
+        record_type: str | None,
+        provider: str,
+        device: str | None,
+        user_id: object,
+        detail: EventRecordDetailCreate,
+    ) -> None:
+        """Scalar-safe variant of _emit_event_record_webhook.
+
+        All arguments are plain Python values captured before commit so that no
+        ORM lazy-loading occurs after the session enters 'committed' state.
+        """
+        if not svix_service.is_enabled():
+            return
+        cat = (category or "").lower()
+        if cat == "sleep":
+            eff = detail.sleep_efficiency_score
+            has_stages = any(
+                [
+                    detail.sleep_awake_minutes,
+                    detail.sleep_light_minutes,
+                    detail.sleep_deep_minutes,
+                    detail.sleep_rem_minutes,
+                ]
+            )
+            on_sleep_created(
+                record_id=record_id,
+                user_id=user_id,
+                provider=provider,
+                device=device,
+                start_time=start_datetime.isoformat(),  # type: ignore[union-attr]
+                end_time=end_datetime.isoformat(),  # type: ignore[union-attr]
+                zone_offset=zone_offset,
+                duration_seconds=duration_seconds,
+                efficiency_percent=float(eff) if eff is not None else None,
+                stages={
+                    "awake_minutes": detail.sleep_awake_minutes,
+                    "light_minutes": detail.sleep_light_minutes,
+                    "deep_minutes": detail.sleep_deep_minutes,
+                    "rem_minutes": detail.sleep_rem_minutes,
+                }
+                if has_stages
+                else None,
+                is_nap=detail.is_nap,
+            )
+        elif cat == "workout":
+            avg_pace: int | None = None
+            if detail.average_speed and float(detail.average_speed) > 0:
+                avg_pace = int(1000 / float(detail.average_speed))
+            on_workout_created(
+                record_id=record_id,
+                user_id=user_id,
+                provider=provider,
+                device=device,
+                workout_type=record_type,
+                start_time=start_datetime.isoformat(),  # type: ignore[union-attr]
+                end_time=end_datetime.isoformat(),  # type: ignore[union-attr]
+                zone_offset=zone_offset,
+                duration_seconds=duration_seconds,
+                calories_kcal=float(detail.energy_burned) if detail.energy_burned is not None else None,
+                distance_meters=float(detail.distance) if detail.distance is not None else None,
+                avg_heart_rate_bpm=int(detail.heart_rate_avg) if detail.heart_rate_avg is not None else None,
+                max_heart_rate_bpm=int(detail.heart_rate_max) if detail.heart_rate_max is not None else None,
+                elevation_gain_meters=float(detail.total_elevation_gain)
+                if detail.total_elevation_gain is not None
+                else None,
+                avg_pace_sec_per_km=avg_pace,
+            )
+
     def bulk_create(
         self,
         db_session: DbSession,
@@ -577,7 +670,13 @@ class EventRecordService(
         )
         data_sources_by_id = {ds.id: ds for ds in data_sources}
 
-        dispatches: list[tuple[EventRecord, DataSource, EventRecordDetailCreate]] = []
+        # Capture all ORM attribute values as plain scalars NOW, before commit puts
+        # the session in 'committed' state where lazy-loading raises InvalidRequestError.
+        ScalarTuple = tuple[
+            str | None, str | None, object, object, object, int | None,
+            str | None, str, str | None, object, EventRecordDetailCreate,
+        ]
+        dispatches: list[ScalarTuple] = []
         for detail in details:
             record = records_by_id.get(detail.record_id)
             if record is None or record.data_source_id is None:
@@ -585,15 +684,27 @@ class EventRecordService(
             data_source = data_sources_by_id.get(record.data_source_id)
             if data_source is None:
                 continue
-            dispatches.append((record, data_source, detail))
+            dispatches.append((
+                record.category,
+                record.zone_offset,
+                record.id,
+                record.start_datetime,
+                record.end_datetime,
+                record.duration_seconds,
+                record.type,
+                str(data_source.provider),
+                data_source.device_model,
+                data_source.user_id,
+                detail,
+            ))
 
         if not dispatches:
             return
 
         @sa_event.listens_for(db_session, "after_commit", once=True)
         def _dispatch_bulk_webhooks(session: DbSession) -> None:  # noqa: ARG001
-            for record, data_source, detail in dispatches:
-                self._emit_event_record_webhook(record, data_source, detail)
+            for scalars in dispatches:
+                self._emit_event_record_webhook_scalars(*scalars)
 
     @handle_exceptions
     def _get_records_with_filters(

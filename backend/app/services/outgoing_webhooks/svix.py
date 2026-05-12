@@ -109,7 +109,16 @@ def is_enabled() -> bool:
 
 
 def register_event_types() -> None:
-    """Create / update every WebhookEventType in Svix (idempotent)."""
+    """Create / update every WebhookEventType in Svix (idempotent).
+
+    Skips silently when SVIX_AUTH_TOKEN is not explicitly set — the JWT
+    secret is always derived from SECRET_KEY, so is_enabled() is always
+    True even when Svix was never intentionally configured.  We use the
+    explicit token as the signal that Svix is actually in use.
+    """
+    if settings.svix_auth_token is None:
+        logger.debug("Svix not configured (SVIX_AUTH_TOKEN not set) — skipping event type registration")
+        return
     if not is_enabled():
         return
     assert _client is not None

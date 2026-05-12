@@ -17,11 +17,24 @@ interface RRSample {
   gap: boolean;           // ts delta from previous sample >2000ms
 }
 
+interface SignalStats {
+  rawTotal: number;
+  filteredTotal: number;
+  rollingRMSSD: number | null;
+  rollingCount: number;
+}
+
 export default function BLETestPage() {
   const [status, setStatus] = useState('idle');
   const [samples, setSamples] = useState<RRSample[]>([]);
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
+  const [signalStats, setSignalStats] = useState<SignalStats>({
+    rawTotal: 0,
+    filteredTotal: 0,
+    rollingRMSSD: null,
+    rollingCount: 0,
+  });
 
   const bufferRef = useRef<RRSample[]>([]);
   const deviceRef = useRef<BluetoothDevice | null>(null);
@@ -71,6 +84,17 @@ export default function BLETestPage() {
       rollingRef.current = [...rollingRef.current.slice(-(ROLLING_WINDOW - 1)), pRMSSD];
     }
 
+    const rollingRMSSD =
+      rollingRef.current.length > 0
+        ? rollingRef.current.reduce((a, b) => a + b, 0) / rollingRef.current.length
+        : null;
+
+    setSignalStats({
+      rawTotal: rawTotalRef.current,
+      filteredTotal: filteredTotalRef.current,
+      rollingRMSSD,
+      rollingCount: rollingRef.current.length,
+    });
     setSamples([...bufferRef.current]);
     console.log('BLE sample:', sample);
   }
@@ -145,26 +169,21 @@ export default function BLETestPage() {
 
   // Derived display values — computed fresh on every render triggered by setSamples
   const quality =
-    rawTotalRef.current > 0
-      ? (filteredTotalRef.current / rawTotalRef.current) * 100
+    signalStats.rawTotal > 0
+      ? (signalStats.filteredTotal / signalStats.rawTotal) * 100
       : 100;
-
-  const rollingRMSSD =
-    rollingRef.current.length > 0
-      ? rollingRef.current.reduce((a, b) => a + b, 0) / rollingRef.current.length
-      : null;
 
   // Global RMSSD: pool within-packet diffs from all non-gap samples in the buffer
   const nonGapPackets = samples.filter(s => !s.gap).map(s => s.rr_intervals);
   const globalRMSSD = computeRMSSD(nonGapPackets);
 
   const last = samples[samples.length - 1];
-  const poorSignal = quality < QUALITY_WARN && rawTotalRef.current > 0;
+  const poorSignal = quality < QUALITY_WARN && signalStats.rawTotal > 0;
 
   return (
-    <div style={{ padding: 24, fontFamily: 'monospace', maxWidth: 640 }}>
+    <div style={{ padding: 24, fontFamily: 'monospace', maxWidth: 640, background: '#111', color: '#eee', minHeight: '100vh' }}>
       <h1 style={{ marginBottom: 4 }}>BLE Test — R-R Intervals</h1>
-      <p style={{ marginBottom: 16, color: reconnecting ? '#c80' : '#555' }}>
+      <p style={{ marginBottom: 16, color: reconnecting ? '#f0a500' : '#aaa' }}>
         Status: {status}
       </p>
 
@@ -200,8 +219,8 @@ export default function BLETestPage() {
             style={{
               marginBottom: 12,
               padding: '8px 12px',
-              background: poorSignal ? '#fff0f0' : '#f0fff0',
-              border: `1px solid ${poorSignal ? '#f99' : '#9f9'}`,
+              background: poorSignal ? '#2a0000' : '#002a00',
+              border: `1px solid ${poorSignal ? '#c00' : '#090'}`,
               borderRadius: 6,
             }}
           >
@@ -212,7 +231,7 @@ export default function BLETestPage() {
               </span>
             )}
             <span style={{ color: '#888', marginLeft: 8, fontSize: 12 }}>
-              ({filteredTotalRef.current}/{rawTotalRef.current} R-R passed filter)
+              ({signalStats.filteredTotal}/{signalStats.rawTotal} R-R passed filter)
             </span>
           </div>
 
@@ -238,22 +257,22 @@ export default function BLETestPage() {
             style={{
               marginTop: 12,
               padding: '10px 14px',
-              background: '#f8f8f8',
-              border: '1px solid #ddd',
+              background: '#1a1a1a',
+              border: '1px solid #333',
               borderRadius: 6,
             }}
           >
             <p style={{ margin: '0 0 4px' }}>
               <strong>Rolling RMSSD</strong>{' '}
               <span style={{ color: '#888', fontSize: 12 }}>
-                (avg of last {rollingRef.current.length} packets)
+                (avg of last {signalStats.rollingCount} packets)
               </span>
               :{' '}
-              {rollingRMSSD !== null
-                ? rollingRMSSD.toFixed(1) + ' ms'
+              {signalStats.rollingRMSSD !== null
+                ? signalStats.rollingRMSSD.toFixed(1) + ' ms'
                 : 'not enough data'}
             </p>
-            <p style={{ margin: 0, color: '#555' }}>
+            <p style={{ margin: 0, color: '#bbb' }}>
               <strong>Session RMSSD</strong>{' '}
               <span style={{ color: '#888', fontSize: 12 }}>
                 (all non-gap samples)
@@ -274,7 +293,7 @@ export default function BLETestPage() {
                 maxHeight: 400,
                 overflow: 'auto',
                 marginTop: 8,
-                background: '#f4f4f4',
+                background: '#1a1a1a',
                 padding: 8,
                 borderRadius: 4,
               }}
