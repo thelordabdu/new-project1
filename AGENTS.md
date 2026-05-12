@@ -1,7 +1,7 @@
-# multi-wearable-tracker — Agent instructions
+# multi-wearable-tracker — Agent Instructions
 
 > **Start here.** Then immediately read `docs/CONTEXT.md` — it is the single source of truth for current status, what to build next, credentials, DB gotchas, and code rules.
-> This file covers repo structure and git workflow only. Everything else is in `docs/CONTEXT.md`.
+> This file is the shared entrypoint for all coding agents, including Claude, Codex, Cursor, and any future agent. It covers repo structure and git workflow only. Everything else is in `docs/CONTEXT.md`.
 
 ---
 
@@ -10,6 +10,8 @@
 1. `docs/CONTEXT.md` — current status, active version, what to do next, credentials, rules
 2. `docs/roadmap.md` — full version checklist, find the active sub-task
 3. `docs/v0/v0.X.md` — plan for the specific version you're working on (write it first if it doesn't exist)
+
+This is the only agent instruction file in the repo. Keep it tool-neutral and update it when agent workflow rules change.
 
 ---
 
@@ -26,7 +28,7 @@ new-project1/
 │       │       └── garmin/   ← Garmin OAuth, data sync
 │       ├── algorithms/   ← Pure functions. No DB calls. Input raw data, output a number.
 │       ├── comparator/   ← diff.py (nightly diff), migration.py (streak detection)
-│       ├── tasks/        ← Celery background tasks
+│       ├── tasks/        ← Deferred background task modules
 │       ├── models/       ← SQLAlchemy models
 │       └── repositories/ ← Data access layer
 ├── frontend/             ← Next.js 14 App Router (TypeScript)
@@ -48,9 +50,10 @@ new-project1/
 │   ├── tech-plan.md
 │   ├── algo-strategy.md
 │   └── v0/               ← One findings/plan doc per version
-├── docker-compose.yml
-└── .env.example
+└── docker-compose.yml
 ```
+
+Current v0.2.1 runtime: Docker Compose starts only the backend API. Supabase Postgres is external. Celery/Redis are deferred until background jobs are needed.
 
 ---
 

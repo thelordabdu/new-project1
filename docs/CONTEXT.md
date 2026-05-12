@@ -11,8 +11,8 @@
 **Last updated:** 2026-05-12
 
 **Active epic:** v0 — Foundation
-**Active version:** v0.2.1 follow-up — Tech stack config cleanup
-**Status:** Complete on `fix/v0.2.1/tech-stack-config`. v0.2.2 root cleanup is next, then v0.2.3 backend architecture, then v0.2.4 frontend architecture.
+**Active version:** v0.2.2 follow-up — Root cleanup
+**Status:** Complete on `fix/v0.2.2/root-cleanup`. v0.2.3 backend architecture is next, then v0.2.4 frontend architecture.
 
 **What was just finished (v0.2):**
 - Whoop OAuth works end-to-end
@@ -27,8 +27,14 @@
 3. Celery/Redis are deferred, documented, and out of active compose
 4. Docker command cheat sheet added at `docs/docker-cheatsheet.md`
 
-**What to do next (cleanup branches):**
-1. v0.2.2 — root cleanup
+**What was just finished (v0.2.2):**
+1. Keep only one tool-neutral agent entrypoint at `AGENTS.md`
+2. Keep `.cursor` because it contains custom MCP configuration
+3. Add concise root developer `README.md`
+4. Remove stale root `.env.example`; env examples live with the app that consumes them
+5. Keep backend/frontend source moves out of this branch
+
+**What to do after root cleanup:**
 2. v0.2.3 — backend architecture restructure
 3. v0.2.4 — frontend architecture restructure
 
